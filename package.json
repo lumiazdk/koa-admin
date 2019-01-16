@@ -1,0 +1,17 @@
+{
+  "name": "koajs",
+  "version": "1.0.0",
+  "description": "以koajs为后端框架的项目",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "koajs"
+  ],
+  "author": "朱定坤",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.6.2"
+  }
+}
