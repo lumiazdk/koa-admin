@@ -13,9 +13,11 @@
   "author": "朱定坤",
   "license": "ISC",
   "dependencies": {
+    "jwt-simple": "^0.5.5",
     "koa": "^2.6.2",
     "koa-better-body": "^3.0.4",
     "koa-convert": "^1.2.0",
+    "koa-jwt": "^3.5.1",
     "koa-router": "^7.4.0",
     "koa-static-cache": "^5.1.2",
     "mysql-pro": "^1.0.1",

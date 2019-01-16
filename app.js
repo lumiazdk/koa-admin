@@ -6,7 +6,7 @@ const config = require('./config');
 const staticCache = require('koa-static-cache');
 const error = require('./libs/error_handler');
 const loglib = require('./libs/log');
-
+const koaJwt = require('koa-jwt') //路由权限控制
 
 const app = new Koa();
 //webpack
@@ -16,14 +16,32 @@ let db = require('./libs/db');
 
 //router
 let mainRouter = new Router();
-mainRouter.use('/', require('./routers/index'));
+mainRouter.use('/', require('./routers/user'));
 
 //错误处理
 error(app);
 loglib(app);
 
-app
+//秘钥
+const jwtSecret = 'jwtSecret'
 
+app.use(function (ctx, next) {
+    return next().catch((err) => {
+        if (401 == err.status) {
+            ctx.status = 401;
+            ctx.body = {
+                code: -1,
+                message: '没有权限，请重新登陆！'
+            };
+        } else {
+            throw err;
+        }
+    });
+});
+app.use(koaJwt({ secret: jwtSecret }).unless({
+    path: [/^\/login/]
+}))
+app
     .use(convert(koaBetterBody(
         {
             uploadDir: config.uploadDir,
@@ -32,7 +50,6 @@ app
         }
     )))
     .use(mainRouter.routes())
-
     .use(staticCache(config.wwwDir))
     .use(async (ctx, next) => {
         ctx.body = {
