@@ -23,16 +23,16 @@ error(app);
 loglib(app);
 
 app
-    .use(async (ctx, next) => {
-        ctx.db = db
-        await next()
-    })
-    .use(mainRouter.routes())
+
     .use(convert(koaBetterBody(
         {
-            uploadDir: config.uploadDir
+            uploadDir: config.uploadDir,
+            keepExtensions: true
+
         }
     )))
+    .use(mainRouter.routes())
+
     .use(staticCache(config.wwwDir))
     .use(async (ctx, next) => {
         ctx.body = {

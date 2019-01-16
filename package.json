@@ -4,7 +4,8 @@
   "description": "以koajs为后端框架的项目",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "keywords": [
     "koajs"
@@ -17,7 +18,8 @@
     "koa-convert": "^1.2.0",
     "koa-router": "^7.4.0",
     "koa-static-cache": "^5.1.2",
-    "mysql-pro": "^1.0.1"
+    "mysql-pro": "^1.0.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "koa-webpack-dev-middleware": "^2.0.2",

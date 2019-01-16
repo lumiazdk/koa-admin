@@ -2,7 +2,7 @@ const pathlib = require('path')
 module.exports = {
     //basic
     port: 8080,
-    uploadDir: pathlib.resolve('www/upload'),
+    uploadDir: pathlib.resolve('./upload'),
     wwwDir: pathlib.resolve('www'),
     logpath: pathlib.resolve('log/access.log'),
 
