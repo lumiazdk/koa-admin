@@ -7,7 +7,9 @@ const staticCache = require('koa-static-cache');
 const error = require('./libs/error_handler');
 const loglib = require('./libs/log');
 
+
 const app = new Koa();
+//webpack
 
 //连接数据库
 let db = require('./libs/db');
