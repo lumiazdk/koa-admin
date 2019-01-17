@@ -1,5 +1,5 @@
 const Koa = require('koa');
-var Router = require('koa-router');
+const Router = require('koa-router');
 const koaBetterBody = require('koa-better-body')
 const convert = require('koa-convert');
 const config = require('./config');
@@ -24,7 +24,30 @@ loglib(app);
 
 //秘钥
 const jwtSecret = 'jwtSecret'
+//结果
 
+
+app.use(async (ctx, next) => {
+    let results = {
+        success(value, message = '成功') {
+            ctx.body = {
+                code: 1,
+                result: { ...value },
+                message: message
+            }
+        },
+        error(message = '失败') {
+            ctx.body = {
+                code: 0,
+                message: message
+            }
+        }
+    }
+    ctx.results = results;
+    ctx.db = db;
+
+    await next()
+});
 app.use(function (ctx, next) {
     return next().catch((err) => {
         if (401 == err.status) {
@@ -39,7 +62,7 @@ app.use(function (ctx, next) {
     });
 });
 app.use(koaJwt({ secret: jwtSecret }).unless({
-    path: [/^\/login/]
+    path: [/^\/login/, /.html/]
 }))
 app
     .use(convert(koaBetterBody(
@@ -51,6 +74,8 @@ app
     )))
     .use(mainRouter.routes())
     .use(staticCache(config.wwwDir))
+    .use(staticCache(config.uploadDir))
+
     .use(async (ctx, next) => {
         ctx.body = {
             err: '没有此api'
@@ -58,4 +83,4 @@ app
     })
 
 
-app.listen(3000)
+app.listen(config.port)

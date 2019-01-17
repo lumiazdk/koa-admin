@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "nodemon  app.js"
   },
   "keywords": [
     "koajs"
@@ -13,6 +13,7 @@
   "author": "朱定坤",
   "license": "ISC",
   "dependencies": {
+    "captchapng": "^0.0.1",
     "jwt-simple": "^0.5.5",
     "koa": "^2.6.2",
     "koa-better-body": "^3.0.4",
