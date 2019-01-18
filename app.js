@@ -17,6 +17,8 @@ let db = require('./libs/db');
 //router
 let mainRouter = new Router();
 mainRouter.use('/', require('./routers/user'));
+mainRouter.use('/', require('./routers/article'));
+
 
 //错误处理
 error(app);
@@ -24,10 +26,9 @@ loglib(app);
 
 //秘钥
 const jwtSecret = 'jwtSecret'
-//结果
-
 
 app.use(async (ctx, next) => {
+    //结果
     let results = {
         success(value, message = '成功') {
             ctx.body = {
@@ -45,7 +46,6 @@ app.use(async (ctx, next) => {
     }
     ctx.results = results;
     ctx.db = db;
-
     await next()
 });
 app.use(function (ctx, next) {
@@ -64,23 +64,22 @@ app.use(function (ctx, next) {
 app.use(koaJwt({ secret: jwtSecret }).unless({
     path: [/^\/login/, /.html/]
 }))
-app
-    .use(convert(koaBetterBody(
-        {
-            uploadDir: config.uploadDir,
-            keepExtensions: true
+app.use(convert(koaBetterBody(
+    {
+        uploadDir: config.uploadDir,
+        keepExtensions: true
 
-        }
-    )))
-    .use(mainRouter.routes())
-    .use(staticCache(config.wwwDir))
-    .use(staticCache(config.uploadDir))
+    }
+)))
+app.use(mainRouter.routes())
+app.use(staticCache(config.wwwDir))
+app.use(staticCache(config.uploadDir))
 
-    .use(async (ctx, next) => {
-        ctx.body = {
-            err: '没有此api'
-        }
-    })
+app.use(async (ctx, next) => {
+    ctx.body = {
+        err: '没有此api'
+    }
+})
 
 
 app.listen(config.port)
