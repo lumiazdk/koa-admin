@@ -73,8 +73,18 @@ router.post('addTagToPost', async ctx => {
         ctx.results.error('tagid为必传')
         return
     }
+    let isHave = await ctx.db.query('select * from tag_relationship where tagid=? and postid=?', [tagid, postid])
+    let isLength = await ctx.db.query('select * from tag_relationship where postid=?', [postid])
+
+    if (isHave.length > 0) {
+        ctx.results.error('该标签已存在')
+        return
+    } else if (isLength.length > 3) {
+        ctx.results.error('标签不能超过4个')
+        return
+    }
     let ispost = await ctx.db.query('select * from post where id=?', [postid])
-    let istag = await ctx.db.query('select * from tag where id=?', [tagid])
+    let istag = await ctx.db.query('select * from tag where tid=?', [tagid])
     if (ispost.length == 0) {
         ctx.results.error('该文章不存在')
     } else if (istag.length == 0) {
@@ -85,6 +95,7 @@ router.post('addTagToPost', async ctx => {
     }
 })
 
+//获取博文
 router.post('getPost', async ctx => {
     let { page, pageSize, where } = ctx.request.fields ? ctx.request.fields : {}
     if (!/^[0-9]+$/.test(page)) {
@@ -100,14 +111,9 @@ router.post('getPost', async ctx => {
         for (let k in where) {
             arr.push(`${k}="${where[k]}"`)
         }
-        // searchQuery = `where ${arr.toString()} and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`
         searchQuery = `where ${arr.toString()}`
-
-    } else {
-
     }
     let start = 0 + (page - 1) * 10
-    // let data = await ctx.db.query(`select * from tag_relationship,tag,post ${searchQuery}`)
     let data = await ctx.db.query(`select * from post ${searchQuery} limit ?,?`, [start, parseInt(pageSize)])
     let result = []
     for (let item of Array.from(data)) {
@@ -124,4 +130,83 @@ router.post('getPost', async ctx => {
     ctx.results.success({ result, pageInfo })
 })
 
+//删除分类
+router.post('deleteCategory', async ctx => {
+    let { id } = ctx.request.fields ? ctx.request.fields : {}
+    if (!/^[0-9]+$/.test(id)) {
+        ctx.results.error('id必为整数')
+        return
+    }
+    let ishave = await ctx.db.query('select * from category where categoryId=?', [id])
+    if (ishave.length == 0) {
+        ctx.results.error('暂无此分类！')
+        return
+    }
+    let result = await ctx.db.query('delete from category where categoryId=?', [id])
+    ctx.results.success({}, '删除成功！')
+})
+
+//更新分类
+router.post('updateCategory', async (ctx) => {
+
+
+    let { id, name } = ctx.request.fields ? ctx.request.fields : {};
+
+    if (!id) {
+        ctx.results.error('id不能为空！')
+        return false;
+    }
+    if (!name) {
+        ctx.results.error('名称不能为空！')
+        return false;
+    }
+    let ishave = await ctx.db.query(`select * from category  where categoryId=?`, [id])
+    if (ishave.length == 0) {
+        ctx.results.error('暂无此分类')
+        return
+    }
+    await ctx.db.query(`update category set name=? where categoryId=?`, [name, id])
+    ctx.results.success()
+
+})
+
+//删除标签
+router.post('deleteTag', async ctx => {
+    let { id } = ctx.request.fields ? ctx.request.fields : {}
+    if (!/^[0-9]+$/.test(id)) {
+        ctx.results.error('id必为整数')
+        return
+    }
+    let ishave = await ctx.db.query('select * from tag where tid=?', [id])
+    if (ishave.length == 0) {
+        ctx.results.error('暂无此标签！')
+        return
+    }
+    let result = await ctx.db.query('delete from tag where tid=?', [id])
+    ctx.results.success({}, '删除成功！')
+})
+
+//更新标签
+router.post('updateTag', async (ctx) => {
+
+
+    let { id, name } = ctx.request.fields ? ctx.request.fields : {};
+
+    if (!id) {
+        ctx.results.error('id不能为空！')
+        return false;
+    }
+    if (!name) {
+        ctx.results.error('名称不能为空！')
+        return false;
+    }
+    let ishave = await ctx.db.query(`select * from tag  where tid=?`, [id])
+    if (ishave.length == 0) {
+        ctx.results.error('暂无此标签')
+        return
+    }
+    await ctx.db.query(`update tag set name=? where tid=?`, [name, id])
+    ctx.results.success()
+
+})
 module.exports = router.routes();
