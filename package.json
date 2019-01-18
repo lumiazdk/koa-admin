@@ -21,6 +21,7 @@
     "koa-jwt": "^3.5.1",
     "koa-router": "^7.4.0",
     "koa-static-cache": "^5.1.2",
+    "moment": "^2.23.0",
     "mysql-pro": "^1.0.1",
     "uuid": "^3.3.2"
   },

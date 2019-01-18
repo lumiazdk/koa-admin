@@ -1,5 +1,5 @@
 const Router = require('koa-router');
-
+const moment = require('moment')
 let router = new Router();
 
 //添加post
@@ -207,6 +207,75 @@ router.post('updateTag', async (ctx) => {
     }
     await ctx.db.query(`update tag set name=? where tid=?`, [name, id])
     ctx.results.success()
+
+})
+//添加评论
+router.post('addComment', async ctx => {
+    let { comment_id, post_id, user_id, create_time = moment().format("YYYY-MM-DD HH:mm:ss"), update_time = moment().format("YYYY-MM-DD HH:mm:ss"), content, father_id } = ctx.request.fields ? ctx.request.fields : {}
+
+    if (!post_id) {
+        ctx.results.error('id不能为空！')
+        return false;
+    }
+    if (!user_id) {
+        ctx.results.error('user_id不能为空！')
+        return false;
+    }
+    if (!content) {
+        ctx.results.error('content不能为空！')
+        return false;
+    }
+    if (!father_id) {
+        ctx.results.error('father_id不能为空！')
+        return false;
+    }
+    let is_post_id = await ctx.db.query('select * from post where id=?', [post_id])
+    if (is_post_id.length == 0) {
+        ctx.results.error('此文章不存在')
+        return false;
+
+    }
+    let is_user_id = await ctx.db.query('select * from users where id=?', [user_id])
+    if (is_user_id.length == 0) {
+        ctx.results.error('此用户不存在')
+        return false;
+    }
+    if (father_id != -1) {
+        let is_father_id = await ctx.db.query('select * from users where id=?', [father_id])
+        if (is_father_id.length == 0) {
+            ctx.results.error('此评论用户不存在')
+            return false;
+
+        }
+    }
+
+
+
+    await ctx.db.query('insert into comment ( post_id, user_id,create_time,update_time,content,father_id) values (?,?,?,?,?,?)', [post_id, user_id, create_time, update_time, content, father_id])
+    ctx.results.success({}, '添加成功')
+})
+//获取评论
+router.post('getComment', async ctx => {
+    let { post_id } = ctx.request.fields ? ctx.request.fields : {}
+    if (!post_id) {
+        ctx.results.error('post_id不能为空！')
+        return false;
+    }
+    let commentData = await ctx.db.query('select * from comment where post_id=?', [post_id])
+    console.log(commentData)
+    let result = []
+    for (let item of commentData) {
+        let userInfo = await ctx.db.query('select name,id from users where id=?', [item.user_id])
+        if (item.father_id != -1) {
+            fatherInfo = await ctx.db.query('select name,id from users where id=?', [item.father_id])
+            item.fatherInfo = fatherInfo
+
+        }
+        item.userInfo = userInfo
+
+        result.push(item)
+    }
+    ctx.results.success({ result }, '获取成功')
 
 })
 module.exports = router.routes();
