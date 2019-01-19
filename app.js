@@ -7,6 +7,7 @@ const staticCache = require('koa-static-cache');
 const error = require('./libs/error_handler');
 const loglib = require('./libs/log');
 const koaJwt = require('koa-jwt') //路由权限控制
+const json_schema = require('./libs/json_schema.js')
 
 const app = new Koa();
 //webpack
@@ -42,8 +43,16 @@ app.use(async (ctx, next) => {
                 code: 0,
                 message: message
             }
+        },
+        jsonErrors(value, message = '数据验证失败') {
+            ctx.body = {
+                code: -104,
+                result: { ...value },
+                message: message
+            }
         }
     }
+    ctx.json_schema = json_schema
     ctx.results = results;
     ctx.db = db;
     await next()

@@ -1,5 +1,9 @@
 const Router = require('koa-router');
 const moment = require('moment')
+const Ajv = require('ajv');
+const ajv = new Ajv({ allErrors: true, jsonPointers: true });
+// Ajv options allErrors and jsonPointers are required
+require('ajv-errors')(ajv /*, {singleError: true} */);
 let router = new Router();
 
 //添加post
@@ -257,12 +261,16 @@ router.post('addComment', async ctx => {
 //获取评论
 router.post('getComment', async ctx => {
     let { post_id } = ctx.request.fields ? ctx.request.fields : {}
-    if (!post_id) {
-        ctx.results.error('post_id不能为空！')
-        return false;
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        post_id: { type: "number", message: 'post_id不能为空！' },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
     let commentData = await ctx.db.query('select * from comment where post_id=?', [post_id])
-    console.log(commentData)
     let result = []
     for (let item of commentData) {
         let userInfo = await ctx.db.query('select name,id from users where id=?', [item.user_id])
@@ -276,6 +284,7 @@ router.post('getComment', async ctx => {
         result.push(item)
     }
     ctx.results.success({ result }, '获取成功')
+
 
 })
 module.exports = router.routes();

@@ -13,6 +13,7 @@
   "author": "朱定坤",
   "license": "ISC",
   "dependencies": {
+    "ajv-errors": "^1.0.1",
     "captchapng": "^0.0.1",
     "jwt-simple": "^0.5.5",
     "koa": "^2.6.2",
