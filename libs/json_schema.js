@@ -1,22 +1,22 @@
 module.exports = function (body, schema) {
+    //错误结果数组
     let errors = []
+    //现已支持的类型
     const types = {
         required: {
             message: '此字段为必填'
         },
         string: {
             name: String,
-
             message: '此字段应为字符串类型'
         },
         number: {
             name: Number,
-
             message: '此字段应为数字类型'
         }
     }
+    //验证类型
     for (let k in schema) {
-        console.log(22)
         if (schema[k]['type'] == 'required') {
             if (!body[k]) {
                 errors.push({
@@ -25,7 +25,6 @@ module.exports = function (body, schema) {
                 })
             }
         } else {
-            console.log(types[schema[k]['type']])
             if (!(body[k] instanceof types[schema[k]['type']].name)) {
                 errors.push({
                     fields: k,
@@ -33,6 +32,7 @@ module.exports = function (body, schema) {
                 })
             }
         }
+        //验证正则
         if (schema[k]['reg']) {
             if (!schema[k]['reg'].test(body[k])) {
                 errors.push({
