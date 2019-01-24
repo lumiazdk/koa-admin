@@ -8,10 +8,9 @@ const error = require('./libs/error_handler');
 const loglib = require('./libs/log');
 const koaJwt = require('koa-jwt') //路由权限控制
 const json_schema = require('./libs/json_schema.js')
-
+const serve = require('koa-static');
 const app = new Koa();
 //webpack
-
 //连接数据库
 let db = require('./libs/db');
 
@@ -29,6 +28,12 @@ loglib(app);
 const jwtSecret = 'jwtSecret'
 
 app.use(async (ctx, next) => {
+    ctx.response.set('Access-Control-Allow-Origin', '*');
+    ctx.response.set('Access-Control-Allow-Methods', 'POST,GET,OPTIONS, PUT, DELETE');
+    ctx.response.set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
+    ctx.response.set('Content-Type', 'application/json');
+
+
     //结果
     let results = {
         success(value, message = '成功') {
@@ -57,10 +62,12 @@ app.use(async (ctx, next) => {
     ctx.db = db;
     await next()
 });
+app.use(staticCache(config.wwwDir))
+app.use(serve(config.uploadDir));
 app.use(function (ctx, next) {
     return next().catch((err) => {
         if (401 == err.status) {
-            ctx.status = 401;
+            // ctx.status = 401;
             ctx.body = {
                 code: -1,
                 message: '没有权限，请重新登陆！'
@@ -70,8 +77,9 @@ app.use(function (ctx, next) {
         }
     });
 });
+
 app.use(koaJwt({ secret: jwtSecret }).unless({
-    path: [/^\/login/, /.html/]
+    path: [/^\/login/, /.html/, /\w(\.gif|\.jpeg|\.png|\.jpg|\.bmp)/i]
 }))
 app.use(convert(koaBetterBody(
     {
@@ -81,8 +89,7 @@ app.use(convert(koaBetterBody(
     }
 )))
 app.use(mainRouter.routes())
-app.use(staticCache(config.wwwDir))
-app.use(staticCache(config.uploadDir))
+
 
 app.use(async (ctx, next) => {
     ctx.body = {

@@ -41,6 +41,15 @@ module.exports = function (body, schema) {
                 })
             }
         }
+        //支持expression
+        if (schema[k]['exp']) {
+            if (!eval(schema[k]['exp'])) {
+                errors.push({
+                    fields: k,
+                    errorMessage: schema[k].message
+                })
+            }
+        }
     }
     if (errors.length != 0) {
         return errors

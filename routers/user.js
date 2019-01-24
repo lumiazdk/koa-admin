@@ -4,7 +4,7 @@ const jwt = require('jwt-simple')
 const uuid = require('uuid')
 const captchapng = require('captchapng')
 let router = new Router();
-const secret = 'abcdefg';
+
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
@@ -12,35 +12,37 @@ const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
 //注册
 router.post('register', async ctx => {
 
-    let { phone, password } = ctx.request.fields ? ctx.request.fields : {}
-    const name = `用户${uuid.v1().split('-')[0]}`
-    const photo = `127.0.0.1:8080/photo.jpeg`
-    if (!(/^1[34578]\d{9}$/.test(phone))) {
-        ctx.results.error('手机号有误')
-        return false;
-    } else if (!password) {
-        ctx.results.error('密码不能为空')
-        return false;
+    let { user_telephone_number, user_password, motto = '这个人很懒，什么都没留下' } = ctx.request.fields ? ctx.request.fields : {}
+    const user_name = `用户${uuid.v1().split('-')[0]}`
+    const user_profile_photo = `http://127.0.0.1:8080/photo.jpeg`
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        user_telephone_number: { type: "required", reg: /^1[34578]\d{9}$/, message: '手机号有误' },
+        user_password: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
     //处理密码
-    var md5 = crypto.createHash('md5').update(password, 'utf-8').digest('hex');
+    var md5 = crypto.createHash('md5').update(user_password, 'utf-8').digest('hex');
     //sql
-    let ishave = await ctx.db.query("select (phone) from users where phone=?", [phone])
+    let ishave = await ctx.db.query("select (user_telephone_number) from users where user_telephone_number=?", [user_telephone_number])
     if (ishave.length > 0) {
         ctx.results.error('此用户已注册')
     } else {
-        let data = await ctx.db.query("insert into users (phone,password,name,photo) values (?,?,?,?);", [phone, md5, name, photo]);
+        let data = await ctx.db.query("insert into users (user_telephone_number,user_password,user_name,user_profile_photo,create_time,update_time,motto) values (?,?,?,?,?,?,?);", [user_telephone_number, md5, user_name, user_profile_photo, new Date(), new Date(), motto]);
         let payload = {
             exp: Date.now() + tokenExpiresTime,
-            phone: phone
+            user_telephone_number: user_telephone_number
         }
+        let userInfo = await ctx.db.query("select * from users where user_id=?", [data.insertId])
+        delete userInfo[0].user_password
         let token = jwt.encode(payload, jwtSecret)
         ctx.results.success({
-            token, userInfo: {
-                name,
-                phone,
-                photo
-            }
+            token, userInfo: userInfo[0]
         })
     }
 });
@@ -49,13 +51,17 @@ router.post('register', async ctx => {
 router.post('login', async ctx => {
 
 
-    const { phone, password, captcha } = ctx.request.fields ? ctx.request.fields : {}
-    if (!(/^1[34578]\d{9}$/.test(phone))) {
-        ctx.results.error('手机号有误')
-        return false;
-    } else if (!password) {
-        ctx.results.error('密码不能为空')
-        return false;
+    const { user_telephone_number, user_password, captcha } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        user_telephone_number: { type: "required", reg: /^1[34578]\d{9}$/, message: '手机号有误' },
+        user_password: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
     //判断验证码
     if (0) {
@@ -69,25 +75,20 @@ router.post('login', async ctx => {
         }
     }
     //sql
-    const ishave = await ctx.db.query("select * from users where phone=?", [phone])
+    const ishave = await ctx.db.query("select * from users where user_telephone_number=?", [user_telephone_number])
     if (ishave.length == 0) {
         ctx.results.error('暂无此用户！')
     } else {
-        var md5 = crypto.createHash('md5').update(password, 'utf-8').digest('hex');
+        var md5 = crypto.createHash('md5').update(user_password, 'utf-8').digest('hex');
 
-        if (ishave[0].password == md5) {
+        if (ishave[0].user_password == md5) {
             let payload = {
                 exp: Date.now() + tokenExpiresTime,
-                phone: phone
+                user_telephone_number: user_telephone_number
             }
             let token = jwt.encode(payload, jwtSecret)
-            let { name, photo } = ishave[0]
             ctx.results.success({
-                token, userInfo: {
-                    name: name.split('-')[0],
-                    phone,
-                    photo
-                }
+                token, userInfo: ishave[0]
             })
         } else {
             ctx.results.error('密码错误！')
@@ -112,14 +113,20 @@ router.post('getCaptchas', async ctx => {
 //用户详情
 router.post('userInfo', async (ctx) => {
 
-    let { phone } = ctx.request.fields ? ctx.request.fields : {};
-    if (!(/^1[34578]\d{9}$/.test(phone))) {
-        ctx.results.error('手机号有误')
-        return false;
+    let { user_telephone_number } = ctx.request.fields ? ctx.request.fields : {};
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        user_telephone_number: { type: "required", reg: /^1[34578]\d{9}$/, message: '手机号有误' },
     }
-    let ishave = await ctx.db.query("select * from users where phone=?", [phone])
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
+    let ishave = await ctx.db.query("select * from users where user_telephone_number=?", [user_telephone_number])
     let data = ishave[0]
-    delete data['password']
+    delete data['user_password']
     if (ishave.length > 0) {
         ctx.results.success({
             userInfo: data
@@ -128,37 +135,44 @@ router.post('userInfo', async (ctx) => {
 
 })
 
-//用户详情
+//更新用户
 router.post('updateUserInfo', async (ctx) => {
 
 
     let { id, name, photo } = ctx.request.fields ? ctx.request.fields : {};
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
     if (photo) {
-        photo = `127.0.0.1:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+        photo = `http://127.0.0.1:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
     } else {
         let oldphoto = await ctx.db.query('select * from users where id=?', [id])
-        photo = oldphoto[0].photo
+        photo = oldphoto[0].user_profile_photo
     }
-    if (!id) {
-        ctx.results.error('id不能为空！')
-        return false;
+    let schema = {
+        id: { type: "required" },
+        name: { type: "required" },
     }
-    if (!name) {
-        ctx.results.error('姓名不能为空！')
-        return false;
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
-    let ishave = await ctx.db.query(`update users set name=?,photo=? where id=?`, [name, photo, id])
+    let ishave = await ctx.db.query(`update users set name=?,user_profile_photo=? where id=?`, [name, user_profile_photo, id])
     ctx.results.success()
 
 })
 router.post('getUsers', async ctx => {
 
     let { page, pageSize, where } = ctx.request.fields ? ctx.request.fields : {}
-    if (!/^[0-9]+$/.test(page)) {
-        ctx.results.error('page为必传')
-        return
-    } else if (!/^[0-9]+$/.test(pageSize)) {
-        ctx.results.error('pageSize为必传')
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        page: { type: "required" },
+        pageSize: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let arr = []
@@ -182,8 +196,14 @@ router.post('getUsers', async ctx => {
 })
 router.post('deleteUsers', async ctx => {
     let { id } = ctx.request.fields ? ctx.request.fields : {}
-    if (!/^[0-9]+$/.test(id)) {
-        ctx.results.error('id必为整数')
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let ishave = await ctx.db.query('select * from users where id=?', [id])

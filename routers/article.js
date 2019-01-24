@@ -1,31 +1,34 @@
 const Router = require('koa-router');
 const moment = require('moment')
-const Ajv = require('ajv');
-const ajv = new Ajv({ allErrors: true, jsonPointers: true });
-// Ajv options allErrors and jsonPointers are required
-require('ajv-errors')(ajv /*, {singleError: true} */);
 let router = new Router();
 
 //添加post
 router.post('addPost', async ctx => {
-    let { aid, title, content } = ctx.request.fields ? ctx.request.fields : {}
-    if (!aid) {
-        ctx.results.error('aid为必传')
+    let { cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        aid: { type: "required" },
+        title: { type: "required" },
+        describes: { type: "required" },
+        background: { type: "required" },
+        content: { type: "required" },
+        cid: { type: "required" },
+
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
-    if (!title) {
-        ctx.results.error('title为必传')
-        return
+    if (background) {
+        background = `http://127.0.0.1:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
     }
-    if (!content) {
-        ctx.results.error('content为必传')
-        return
-    }
-    let isAid = await ctx.db.query('select * from users where id=?', [aid])
+    let isAid = await ctx.db.query('select * from users where user_id=?', [aid])
     if (isAid.length == 0) {
         ctx.results.error('该用户不存在')
     } else {
-        await ctx.db.query('insert into post (aid,title,content) values (?,?,?)', [aid, title, content])
+        await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [aid, title, content, background, create_time, update_time, cid, describes])
         ctx.results.success({}, '添加成功')
     }
 
@@ -34,9 +37,14 @@ router.post('addPost', async ctx => {
 //添加分类
 router.post('addCategory', async ctx => {
     let { name } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
 
-    if (!name) {
-        ctx.results.error('name为必传')
+    let schema = {
+        name: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let ishave = await ctx.db.query('select * from category where name=?', [name])
@@ -47,13 +55,23 @@ router.post('addCategory', async ctx => {
         ctx.results.success({}, '添加成功')
     }
 })
+//获取分类
+router.post('getAllCategory', async ctx => {
+    let data = await ctx.db.query('select * from category')
 
+    ctx.results.success({ data }, '获取成功')
+})
 //添加标签
 router.post('addTag', async ctx => {
     let { name } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
 
-    if (!name) {
-        ctx.results.error('name为必传')
+    let schema = {
+        name: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let ishave = await ctx.db.query('select * from tag where name=?', [name])
@@ -68,13 +86,15 @@ router.post('addTag', async ctx => {
 //打标签
 router.post('addTagToPost', async ctx => {
     let { postid, tagid } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
 
-    if (!postid) {
-        ctx.results.error('postid为必传')
-        return
+    let schema = {
+        postid: { type: "required" },
+        tagid: { type: "required" },
     }
-    if (!tagid) {
-        ctx.results.error('tagid为必传')
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let isHave = await ctx.db.query('select * from tag_relationship where tagid=? and postid=?', [tagid, postid])
@@ -101,12 +121,19 @@ router.post('addTagToPost', async ctx => {
 
 //获取博文
 router.post('getPost', async ctx => {
-    let { page, pageSize, where } = ctx.request.fields ? ctx.request.fields : {}
-    if (!/^[0-9]+$/.test(page)) {
-        ctx.results.error('page为必传')
-        return
-    } else if (!/^[0-9]+$/.test(pageSize)) {
-        ctx.results.error('pageSize为必传')
+    let { page, pageSize, where, user_id } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        page: { type: "required" },
+        pageSize: { type: "required" },
+        user_id: { type: "required" },
+
+
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let arr = []
@@ -122,7 +149,15 @@ router.post('getPost', async ctx => {
     let result = []
     for (let item of Array.from(data)) {
         let data = await ctx.db.query(`select name,tid,postId from tag_relationship,tag,post where postId=? and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`, [item.id])
+        let user = await ctx.db.query(`select user_name,user_id,user_profile_photo,user_nickname from users where user_id=?`, [item.aid])
+        let fabulous = await ctx.db.query(`select * from fabulous where fabulousUser_id=? and post_id=?`, [user_id, item.id])
+        if (fabulous.length == 0) {
+            item.isfabulous = false
+        } else {
+            item.isfabulous = true
+        }
         item.tagInfo = data
+        item.user = user[0]
         result.push(item)
     }
     let total = await ctx.db.query('select count(*) from post')
@@ -137,8 +172,14 @@ router.post('getPost', async ctx => {
 //删除分类
 router.post('deleteCategory', async ctx => {
     let { id } = ctx.request.fields ? ctx.request.fields : {}
-    if (!/^[0-9]+$/.test(id)) {
-        ctx.results.error('id必为整数')
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let ishave = await ctx.db.query('select * from category where categoryId=?', [id])
@@ -155,14 +196,16 @@ router.post('updateCategory', async (ctx) => {
 
 
     let { id, name } = ctx.request.fields ? ctx.request.fields : {};
+    let body = ctx.request.fields ? ctx.request.fields : {}
 
-    if (!id) {
-        ctx.results.error('id不能为空！')
-        return false;
+    let schema = {
+        id: { type: "required" },
+        name: { type: "required" },
     }
-    if (!name) {
-        ctx.results.error('名称不能为空！')
-        return false;
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
     let ishave = await ctx.db.query(`select * from category  where categoryId=?`, [id])
     if (ishave.length == 0) {
@@ -177,8 +220,13 @@ router.post('updateCategory', async (ctx) => {
 //删除标签
 router.post('deleteTag', async ctx => {
     let { id } = ctx.request.fields ? ctx.request.fields : {}
-    if (!/^[0-9]+$/.test(id)) {
-        ctx.results.error('id必为整数')
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
         return
     }
     let ishave = await ctx.db.query('select * from tag where tid=?', [id])
@@ -195,14 +243,15 @@ router.post('updateTag', async (ctx) => {
 
 
     let { id, name } = ctx.request.fields ? ctx.request.fields : {};
-
-    if (!id) {
-        ctx.results.error('id不能为空！')
-        return false;
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        id: { type: "required" },
+        name: { type: "required" },
     }
-    if (!name) {
-        ctx.results.error('名称不能为空！')
-        return false;
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
     }
     let ishave = await ctx.db.query(`select * from tag  where tid=?`, [id])
     if (ishave.length == 0) {
@@ -216,23 +265,35 @@ router.post('updateTag', async (ctx) => {
 //添加评论
 router.post('addComment', async ctx => {
     let { comment_id, post_id, user_id, create_time = moment().format("YYYY-MM-DD HH:mm:ss"), update_time = moment().format("YYYY-MM-DD HH:mm:ss"), content, father_id } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        post_id: { type: "required" },
+        user_id: { type: "required" },
+        content: { type: "required" },
+        father_id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
 
-    if (!post_id) {
-        ctx.results.error('id不能为空！')
-        return false;
-    }
-    if (!user_id) {
-        ctx.results.error('user_id不能为空！')
-        return false;
-    }
-    if (!content) {
-        ctx.results.error('content不能为空！')
-        return false;
-    }
-    if (!father_id) {
-        ctx.results.error('father_id不能为空！')
-        return false;
-    }
+    // if (!post_id) {
+    //     ctx.results.error('id不能为空！')
+    //     return false;
+    // }
+    // if (!user_id) {
+    //     ctx.results.error('user_id不能为空！')
+    //     return false;
+    // }
+    // if (!content) {
+    //     ctx.results.error('content不能为空！')
+    //     return false;
+    // }
+    // if (!father_id) {
+    //     ctx.results.error('father_id不能为空！')
+    //     return false;
+    // }
     let is_post_id = await ctx.db.query('select * from post where id=?', [post_id])
     if (is_post_id.length == 0) {
         ctx.results.error('此文章不存在')
@@ -252,9 +313,6 @@ router.post('addComment', async ctx => {
 
         }
     }
-
-
-
     await ctx.db.query('insert into comment ( post_id, user_id,create_time,update_time,content,father_id) values (?,?,?,?,?,?)', [post_id, user_id, create_time, update_time, content, father_id])
     ctx.results.success({}, '添加成功')
 })
@@ -263,7 +321,7 @@ router.post('getComment', async ctx => {
     let { post_id } = ctx.request.fields ? ctx.request.fields : {}
     let body = ctx.request.fields ? ctx.request.fields : {}
     let schema = {
-        post_id: { type: "number", message: 'post_id不能为空！' },
+        post_id: { type: "required" },
     }
     let errors = ctx.json_schema(body, schema)
     if (errors) {
@@ -286,5 +344,30 @@ router.post('getComment', async ctx => {
     ctx.results.success({ result }, '获取成功')
 
 
+})
+
+//点赞
+router.post('addFabulous', async (ctx) => {
+    let { post_id, fabulousUser_id, create_time = new Date(), update_time = new Date() } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        post_id: { type: "required" },
+        fabulousUser_id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
+    let isHave = await ctx.db.query('select * from  fabulous where post_id=? and  fabulousUser_id=?', [post_id, fabulousUser_id])
+    if (isHave.length == 0) {
+        await ctx.db.query('insert into fabulous ( post_id, fabulousUser_id,create_time,update_time ) values (?,?,?,?)', [post_id, fabulousUser_id, create_time, update_time])
+        ctx.results.success({}, '点赞成功')
+
+    } else {
+        let result = await ctx.db.query('delete from fabulous where post_id=? and  fabulousUser_id=?', [post_id, fabulousUser_id])
+        ctx.results.success({}, '取消点赞成功')
+
+    }
 })
 module.exports = router.routes();
