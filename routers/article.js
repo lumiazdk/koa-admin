@@ -1,7 +1,19 @@
 const Router = require('koa-router');
 const moment = require('moment')
 let router = new Router();
-
+function getIPAdress() {
+    var interfaces = require('os').networkInterfaces();
+    for (var devName in interfaces) {
+        var iface = interfaces[devName];
+        for (var i = 0; i < iface.length; i++) {
+            var alias = iface[i];
+            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+}
+console.log(getIPAdress())
 //添加post
 router.post('addPost', async ctx => {
     let { cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background } = ctx.request.fields ? ctx.request.fields : {}
@@ -22,7 +34,7 @@ router.post('addPost', async ctx => {
         return
     }
     if (background) {
-        background = `http://127.0.0.1:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+        background = `http://${getIPAdress()}:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
     }
     let isAid = await ctx.db.query('select * from users where user_id=?', [aid])
     if (isAid.length == 0) {
@@ -151,6 +163,11 @@ router.post('getPost', async ctx => {
         let data = await ctx.db.query(`select name,tid,postId from tag_relationship,tag,post where postId=? and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`, [item.id])
         let user = await ctx.db.query(`select user_name,user_id,user_profile_photo,user_nickname from users where user_id=?`, [item.aid])
         let fabulous = await ctx.db.query(`select * from fabulous where fabulousUser_id=? and post_id=?`, [user_id, item.id])
+        let comment = await ctx.db.query(`select * from comment where post_id=?`, [item.id])
+
+        let fabulous_num = await ctx.db.query(`select * from fabulous where post_id=?`, [item.id])
+        item.fabulous_num = fabulous_num.length
+        item.comment_num = comment.length
         if (fabulous.length == 0) {
             item.isfabulous = false
         } else {
@@ -277,36 +294,19 @@ router.post('addComment', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-
-    // if (!post_id) {
-    //     ctx.results.error('id不能为空！')
-    //     return false;
-    // }
-    // if (!user_id) {
-    //     ctx.results.error('user_id不能为空！')
-    //     return false;
-    // }
-    // if (!content) {
-    //     ctx.results.error('content不能为空！')
-    //     return false;
-    // }
-    // if (!father_id) {
-    //     ctx.results.error('father_id不能为空！')
-    //     return false;
-    // }
     let is_post_id = await ctx.db.query('select * from post where id=?', [post_id])
     if (is_post_id.length == 0) {
         ctx.results.error('此文章不存在')
         return false;
 
     }
-    let is_user_id = await ctx.db.query('select * from users where id=?', [user_id])
+    let is_user_id = await ctx.db.query('select * from users where user_id=?', [user_id])
     if (is_user_id.length == 0) {
         ctx.results.error('此用户不存在')
         return false;
     }
     if (father_id != -1) {
-        let is_father_id = await ctx.db.query('select * from users where id=?', [father_id])
+        let is_father_id = await ctx.db.query('select * from users where user_id=?', [father_id])
         if (is_father_id.length == 0) {
             ctx.results.error('此评论用户不存在')
             return false;
@@ -331,13 +331,12 @@ router.post('getComment', async ctx => {
     let commentData = await ctx.db.query('select * from comment where post_id=?', [post_id])
     let result = []
     for (let item of commentData) {
-        let userInfo = await ctx.db.query('select name,id from users where id=?', [item.user_id])
+        let userInfo = await ctx.db.query('select user_profile_photo,user_name,user_id from users where user_id=?', [item.user_id])
         if (item.father_id != -1) {
-            fatherInfo = await ctx.db.query('select name,id from users where id=?', [item.father_id])
-            item.fatherInfo = fatherInfo
-
+            fatherInfo = await ctx.db.query('select user_profile_photo,user_name,user_id from users where user_id=?', [item.father_id])
+            item.fatherInfo = fatherInfo[0]
         }
-        item.userInfo = userInfo
+        item.userInfo = userInfo[0]
 
         result.push(item)
     }
@@ -369,5 +368,26 @@ router.post('addFabulous', async (ctx) => {
         ctx.results.success({}, '取消点赞成功')
 
     }
+})
+//获取赞
+router.post('getFabulous', async (ctx) => {
+    let { post_id } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        post_id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
+    let result = await ctx.db.query('select * from  fabulous where post_id=?', [post_id])
+    for (let item of result) {
+        let userInfo = await ctx.db.query('select * from  users where user_id=?', [item.fabulousUser_id])
+        item.userInfo = userInfo[0]
+
+    }
+
+    ctx.results.success({ result }, '点赞成功')
 })
 module.exports = router.routes();

@@ -9,8 +9,34 @@ const loglib = require('./libs/log');
 const koaJwt = require('koa-jwt') //路由权限控制
 const json_schema = require('./libs/json_schema.js')
 const serve = require('koa-static');
+const compress = require('koa-compress');
 const app = new Koa();
-//webpack
+const path = require('path')
+//compress
+const options = { threshold: 2048 };
+//socket连接
+const server = require('http').Server(app.callback());
+const io = require('socket.io')(server);
+const SocketIO = require('./socket.js')
+const port = 8080;
+function getIPAdress() {
+    var interfaces = require('os').networkInterfaces();
+    for (var devName in interfaces) {
+        var iface = interfaces[devName];
+        for (var i = 0; i < iface.length; i++) {
+            var alias = iface[i];
+            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+}
+const host = getIPAdress()
+server.listen(process.env.PORT || port, host, () => {
+    console.log(`app run at : http://${host}:${port}`);
+})
+SocketIO(io)
+
 //连接数据库
 let db = require('./libs/db');
 
@@ -18,6 +44,8 @@ let db = require('./libs/db');
 let mainRouter = new Router();
 mainRouter.use('/', require('./routers/user'));
 mainRouter.use('/', require('./routers/article'));
+mainRouter.use('/', require('./routers/friends'));
+
 
 
 //错误处理
@@ -31,7 +59,9 @@ app.use(async (ctx, next) => {
     ctx.response.set('Access-Control-Allow-Origin', '*');
     ctx.response.set('Access-Control-Allow-Methods', 'POST,GET,OPTIONS, PUT, DELETE');
     ctx.response.set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
-    ctx.response.set('Content-Type', 'application/json');
+    // ctx.response.set('Content-Type', 'application/json;charset=utf-8');
+    ctx.response.set('X-Powered-By', '3.2.1');
+
 
 
     //结果
@@ -62,8 +92,13 @@ app.use(async (ctx, next) => {
     ctx.db = db;
     await next()
 });
-app.use(staticCache(config.wwwDir))
-app.use(serve(config.uploadDir));
+
+// app.use(staticCache(config.wwwDir))
+
+app.use(serve(path.join(__dirname, './upload')));
+app.use(serve(path.join(__dirname, './www')));
+app.use(compress(options));
+console.log(__dirname + '/upload')
 app.use(function (ctx, next) {
     return next().catch((err) => {
         if (401 == err.status) {
@@ -78,9 +113,9 @@ app.use(function (ctx, next) {
     });
 });
 
-app.use(koaJwt({ secret: jwtSecret }).unless({
-    path: [/^\/login/, /.html/, /\w(\.gif|\.jpeg|\.png|\.jpg|\.bmp)/i]
-}))
+// app.use(koaJwt({ secret: jwtSecret }).unless({
+//     path: [/^\/login/, /.html/, /.css/,/.js/, /\w(\.gif|\.jpeg|\.png|\.jpg|\.bmp)/i]
+// }))
 app.use(convert(koaBetterBody(
     {
         uploadDir: config.uploadDir,
@@ -98,4 +133,4 @@ app.use(async (ctx, next) => {
 })
 
 
-app.listen(config.port)
+// app.listen(config.port)

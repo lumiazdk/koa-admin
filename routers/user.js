@@ -4,7 +4,18 @@ const jwt = require('jwt-simple')
 const uuid = require('uuid')
 const captchapng = require('captchapng')
 let router = new Router();
-
+function getIPAdress() {
+    var interfaces = require('os').networkInterfaces();
+    for (var devName in interfaces) {
+        var iface = interfaces[devName];
+        for (var i = 0; i < iface.length; i++) {
+            var alias = iface[i];
+            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+}
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
@@ -14,7 +25,7 @@ router.post('register', async ctx => {
 
     let { user_telephone_number, user_password, motto = '这个人很懒，什么都没留下' } = ctx.request.fields ? ctx.request.fields : {}
     const user_name = `用户${uuid.v1().split('-')[0]}`
-    const user_profile_photo = `http://127.0.0.1:8080/photo.jpeg`
+    const user_profile_photo = `http://${getIPAdress()}:8080/photo.jpeg`
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
@@ -33,7 +44,7 @@ router.post('register', async ctx => {
     if (ishave.length > 0) {
         ctx.results.error('此用户已注册')
     } else {
-        let data = await ctx.db.query("insert into users (user_telephone_number,user_password,user_name,user_profile_photo,create_time,update_time,motto) values (?,?,?,?,?,?,?);", [user_telephone_number, md5, user_name, user_profile_photo, new Date(), new Date(), motto]);
+        let data = await ctx.db.query("insert into users (user_telephone_number,user_password,user_name,user_profile_photo,create_time,update_time,motto,user_birthday) values (?,?,?,?,?,?,?,?);", [user_telephone_number, md5, user_name, user_profile_photo, new Date(), new Date(), motto, new Date()]);
         let payload = {
             exp: Date.now() + tokenExpiresTime,
             user_telephone_number: user_telephone_number
@@ -113,18 +124,18 @@ router.post('getCaptchas', async ctx => {
 //用户详情
 router.post('userInfo', async (ctx) => {
 
-    let { user_telephone_number } = ctx.request.fields ? ctx.request.fields : {};
+    let { user_telephone_number ,user_id} = ctx.request.fields ? ctx.request.fields : {};
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
-        user_telephone_number: { type: "required", reg: /^1[34578]\d{9}$/, message: '手机号有误' },
     }
     let errors = ctx.json_schema(body, schema)
     if (errors) {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let ishave = await ctx.db.query("select * from users where user_telephone_number=?", [user_telephone_number])
+    let ishave = await ctx.db.query("select user_name,user_email,user_profile_photo,user_birthday,user_age,user_nickname,motto from users where user_telephone_number=? or user_id=?", [user_telephone_number,user_id])
+    console.log(ishave)
     let data = ishave[0]
     delete data['user_password']
     if (ishave.length > 0) {
@@ -139,26 +150,31 @@ router.post('userInfo', async (ctx) => {
 router.post('updateUserInfo', async (ctx) => {
 
 
-    let { id, name, photo } = ctx.request.fields ? ctx.request.fields : {};
+    let { user_id, user_name, user_profile_photo, user_email, user_birthday, user_age, user_nickname, motto } = ctx.request.fields ? ctx.request.fields : {};
     let body = ctx.request.fields ? ctx.request.fields : {}
 
-    if (photo) {
-        photo = `http://127.0.0.1:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
-    } else {
-        let oldphoto = await ctx.db.query('select * from users where id=?', [id])
-        photo = oldphoto[0].user_profile_photo
-    }
+
     let schema = {
-        id: { type: "required" },
-        name: { type: "required" },
+        user_id: { type: "required" },
+        user_name: { type: "required" },
     }
     let errors = ctx.json_schema(body, schema)
     if (errors) {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let ishave = await ctx.db.query(`update users set name=?,user_profile_photo=? where id=?`, [name, user_profile_photo, id])
-    ctx.results.success()
+    console.log(user_profile_photo)
+    if (user_profile_photo) {
+        user_profile_photo = `http://${getIPAdress()}:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+    } else {
+        console.log(22)
+        let oldphoto = await ctx.db.query('select * from users where user_id=?', [user_id])
+        user_profile_photo = oldphoto[0].user_profile_photo
+    }
+    await ctx.db.query(`update users set user_name=?,user_profile_photo=?,user_email=?,user_birthday=?,user_age=?,user_nickname=?,motto=? where user_id=?`, [user_name, user_profile_photo, user_email, user_birthday, user_age, user_nickname, motto, user_id])
+    let userInfo = await ctx.db.query('select * from users where user_id=?', [user_id])
+    delete userInfo[0].user_password
+    ctx.results.success({ userInfo: userInfo[0] }, '更新成功')
 
 })
 router.post('getUsers', async ctx => {
