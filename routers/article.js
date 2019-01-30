@@ -157,7 +157,7 @@ router.post('getPost', async ctx => {
         searchQuery = `where ${arr.toString()}`
     }
     let start = 0 + (page - 1) * 10
-    let data = await ctx.db.query(`select * from post ${searchQuery} limit ?,?`, [start, parseInt(pageSize)])
+    let data = await ctx.db.query(`select * from post  ${searchQuery} order by create_time DESC limit ?,?`, [start, parseInt(pageSize)])
     let result = []
     for (let item of Array.from(data)) {
         let data = await ctx.db.query(`select name,tid,postId from tag_relationship,tag,post where postId=? and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`, [item.id])

@@ -18,7 +18,7 @@ module.exports = function (body, schema) {
     //验证类型
     for (let k in schema) {
         if (schema[k]['type'] == 'required') {
-            if (!body[k]) {
+            if (body[k] === '') {
                 errors.push({
                     fields: k,
                     errorMessage: types[schema[k]['type']].message

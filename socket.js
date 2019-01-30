@@ -1,6 +1,6 @@
 
-module.exports = function SocketIO(io) {
-    let userServer = {};//服务
+module.exports = function SocketIO(io, db) {
+    global.userServer = {};//服务
     let userList = {}; //nickname列表
     let freeList = [];//user_id列表
     let count = 0;//连接数量
@@ -14,10 +14,9 @@ module.exports = function SocketIO(io) {
             let nickname = data.user_name,
                 user_id = data.user_id;
             socket.id = user_id;
-            userServer[user_id] = socket;
+            global.userServer[user_id] = socket;
             userList[user_id] = nickname
             freeList.push(user_id)
-            userServer['id'].emit('show')
 
         })
         //退出
@@ -29,9 +28,9 @@ module.exports = function SocketIO(io) {
             delete userServer[id]
             delete userList[id]
         })
-        socket.on('message', function (data) {
-            if (userServer.hasOwnProperty(data.to)) {
-                userServer[data.to].emit('getMsg', { msg: data.msg })
+        socket.on('getMessage', function (data) {
+            if (global.userServer.hasOwnProperty(data.user_id)) {
+                global.userServer[data.user_id].emit('getMessage')
             } else {
                 socket.emit("err", { msg: "对方已经下线或者断开连接" })
             }

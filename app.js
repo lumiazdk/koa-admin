@@ -35,10 +35,11 @@ const host = getIPAdress()
 server.listen(process.env.PORT || port, host, () => {
     console.log(`app run at : http://${host}:${port}`);
 })
-SocketIO(io)
 
 //连接数据库
 let db = require('./libs/db');
+//socket
+SocketIO(io, db)
 
 //router
 let mainRouter = new Router();
@@ -56,6 +57,7 @@ loglib(app);
 const jwtSecret = 'jwtSecret'
 
 app.use(async (ctx, next) => {
+
     ctx.response.set('Access-Control-Allow-Origin', '*');
     ctx.response.set('Access-Control-Allow-Methods', 'POST,GET,OPTIONS, PUT, DELETE');
     ctx.response.set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
