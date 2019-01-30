@@ -13,10 +13,9 @@ function getIPAdress() {
         }
     }
 }
-console.log(getIPAdress())
 //添加post
 router.post('addPost', async ctx => {
-    let { cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background } = ctx.request.fields ? ctx.request.fields : {}
+    let { forward_num, postId, cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background, type } = ctx.request.fields ? ctx.request.fields : {}
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
@@ -33,19 +32,42 @@ router.post('addPost', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    if (background) {
-        background = `http://${getIPAdress()}:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+    if (type == 1) {
+
+    } else {
+        if (background) {
+            background = `http://${getIPAdress()}:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+        }
     }
+
     let isAid = await ctx.db.query('select * from users where user_id=?', [aid])
     if (isAid.length == 0) {
         ctx.results.error('该用户不存在')
     } else {
         await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [aid, title, content, background, create_time, update_time, cid, describes])
+        if (type == 1) {
+            await ctx.db.query(`update post set forward_num=? where id=?`, [forward_num + 1, postId])
+        }
         ctx.results.success({}, '添加成功')
     }
 
 })
-
+//查看数量
+router.post('seePostNum', async ctx => {
+    let { id, see_num } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+    let schema = {
+        id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
+    see_num = see_num + Math.floor(Math.random() * 10 + 1)
+    await ctx.db.query(`update post set see_num=? where id=?`, [see_num, id])
+    ctx.results.success({ see_num })
+})
 //添加分类
 router.post('addCategory', async ctx => {
     let { name } = ctx.request.fields ? ctx.request.fields : {}
@@ -135,13 +157,10 @@ router.post('addTagToPost', async ctx => {
 router.post('getPost', async ctx => {
     let { page, pageSize, where, user_id } = ctx.request.fields ? ctx.request.fields : {}
     let body = ctx.request.fields ? ctx.request.fields : {}
-
     let schema = {
         page: { type: "required" },
         pageSize: { type: "required" },
         user_id: { type: "required" },
-
-
     }
     let errors = ctx.json_schema(body, schema)
     if (errors) {
@@ -149,15 +168,20 @@ router.post('getPost', async ctx => {
         return
     }
     let arr = []
-    let searchQuery = ''
+    let searchQuery = 'where'
     if (JSON.stringify(where) != "{}") {
         for (let k in where) {
             arr.push(`${k}="${where[k]}"`)
         }
-        searchQuery = `where ${arr.toString()}`
+        searchQuery = `where ${arr.toString()} and`
     }
     let start = 0 + (page - 1) * 10
-    let data = await ctx.db.query(`select * from post  ${searchQuery} order by create_time DESC limit ?,?`, [start, parseInt(pageSize)])
+    let friend = await ctx.db.query(`select * from friend where user_id=?`, [user_id])
+    let friendarr = [user_id]
+    for (let item of friend) {
+        friendarr.push(item.friend_id)
+    }
+    let data = await ctx.db.query(`select * from post  ${searchQuery} aid in (?) order by create_time DESC limit ?,?`, [friendarr, start, parseInt(pageSize)])
     let result = []
     for (let item of Array.from(data)) {
         let data = await ctx.db.query(`select name,tid,postId from tag_relationship,tag,post where postId=? and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`, [item.id])

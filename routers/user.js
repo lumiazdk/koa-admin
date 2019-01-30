@@ -124,7 +124,7 @@ router.post('getCaptchas', async ctx => {
 //用户详情
 router.post('userInfo', async (ctx) => {
 
-    let { user_telephone_number ,user_id} = ctx.request.fields ? ctx.request.fields : {};
+    let { user_telephone_number, user_id } = ctx.request.fields ? ctx.request.fields : {};
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
@@ -134,7 +134,7 @@ router.post('userInfo', async (ctx) => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let ishave = await ctx.db.query("select user_name,user_email,user_profile_photo,user_birthday,user_age,user_nickname,motto from users where user_telephone_number=? or user_id=?", [user_telephone_number,user_id])
+    let ishave = await ctx.db.query("select user_name,user_email,user_profile_photo,user_birthday,user_age,user_nickname,motto from users where user_telephone_number=? or user_id=?", [user_telephone_number, user_id])
     console.log(ishave)
     let data = ishave[0]
     delete data['user_password']

@@ -50,6 +50,12 @@ router.post('addFriend', async ctx => {
     }
     await ctx.db.query('insert into friend (friend_id,user_id,status,request_id) values (?,?,?,?)', [friend_id, user_id, status, request_id])
     await ctx.db.query('insert into friend (friend_id,user_id,status,request_id) values (?,?,?,?)', [user_id, friend_id, status, request_id])
+    if (global.userServer[user_id]) {
+        global.userServer[user_id].emit('getFriendRequest')
+    }
+    if (global.userServer[friend_id]) {
+        global.userServer[friend_id].emit('getFriendRequest')
+    }
     ctx.results.success({}, '请求成功')
 })
 //获取所有好友
@@ -85,12 +91,35 @@ router.post('getFriend', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let result = await ctx.db.query(`select * from friend where user_id=?  `, [user_id])
+    let result = await ctx.db.query(`select * from friend where user_id=?`, [user_id])
+    let num = 0
     for (let item of result) {
+        if (item.is_read == 1 && item.request_id != user_id) {
+            num = num + 1
+        }
         let friend = await ctx.db.query(`select user_name,user_id,motto,user_profile_photo from users where user_id=?`, [item.friend_id])
         item.friend = friend[0]
+
     }
-    ctx.results.success({ result })
+    ctx.results.success({ result, is_readnum: num })
+})
+//消除请求数量
+router.post('clearFriendBadge', async ctx => {
+    let { user_id, friend_id } = ctx.request.fields ? ctx.request.fields : {}
+    let body = ctx.request.fields ? ctx.request.fields : {}
+
+    let schema = {
+        user_id: { type: "required" },
+        friend_id: { type: "required" },
+    }
+    let errors = ctx.json_schema(body, schema)
+    if (errors) {
+        ctx.results.jsonErrors({ errors })
+        return
+    }
+    await ctx.db.query(`update friend set is_read=0 where user_id=? and friend_id=?`, [user_id, friend_id])
+
+    ctx.results.success({})
 })
 //创建聊天
 router.post('addChat', async ctx => {
@@ -151,13 +180,15 @@ router.post('getChat', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let chat = await ctx.db.query('select * from chat where user_id=?', [user_id])
+    let chat = await ctx.db.query('select * from chat where user_id=? order by update_time DESC', [user_id])
     for (let item of chat) {
         let user = await ctx.db.query('select user_name,user_email,user_profile_photo,user_birthday,user_age,user_nickname,motto from users where user_id=?', [item.friend_id])
         let last_message = await ctx.db.query('select * from message where chat_id=? order by create_time DESC', [item.id])
         item.friendInfo = user[0]
         if (last_message.length > 0) {
             item.last_message = last_message[0].message
+            item.chatTime = last_message[0].create_time
+
 
         }
 
@@ -179,7 +210,7 @@ router.post('getOneChat', async ctx => {
         return
     }
     let chat = await ctx.db.query('select * from chat where user_id=? and friend_id=?', [user_id, friend_id])
-    
+
     ctx.results.success({ chat }, '请求成功')
 })
 //添加信息
