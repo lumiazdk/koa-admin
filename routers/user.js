@@ -25,7 +25,7 @@ router.post('register', async ctx => {
 
     let { user_telephone_number, user_password, motto = '这个人很懒，什么都没留下' } = ctx.request.fields ? ctx.request.fields : {}
     const user_name = `用户${uuid.v1().split('-')[0]}`
-    const user_profile_photo = `http://${getIPAdress()}:8080/photo.jpeg`
+    const user_profile_photo = `http://47.244.57.219:8080/photo.jpeg`
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
