@@ -15,5 +15,5 @@ module.exports = {
     db_port: 3306,
     db_user: 'root',
     db_pass: 'lumiazdk640',
-    db_name: 'mblog',
+    db_name: 'blog',
 }

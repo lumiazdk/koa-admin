@@ -96,6 +96,7 @@ app.use(async (ctx, next) => {
 });
 
 // app.use(staticCache(config.wwwDir))
+app.use(serve(path.join(__dirname, './build')));
 
 app.use(serve(path.join(__dirname, './upload')));
 app.use(serve(path.join(__dirname, './www')));

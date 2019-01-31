@@ -19,7 +19,19 @@ function getIPAdress() {
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
-
+//index.html
+router.get('', (ctx) => {
+    console.log(2)
+    ctx.body =  '<h1>Index</h1> <form action="/login" method="post"> ' 
+    +
+    '<p>Name: <input name="name"></p>' 
+    +
+    ' <p>Password: <input name="password" type="password"></p> ' 
+    +
+    '<p><input type="submit" value="Submit"></p>' 
+    +
+    ' </form>';
+})
 //注册
 router.post('register', async ctx => {
 
