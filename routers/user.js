@@ -19,19 +19,7 @@ function getIPAdress() {
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
-//index.html
-router.get('', (ctx) => {
-    console.log(2)
-    ctx.body =  '<h1>Index</h1> <form action="/login" method="post"> ' 
-    +
-    '<p>Name: <input name="name"></p>' 
-    +
-    ' <p>Password: <input name="password" type="password"></p> ' 
-    +
-    '<p><input type="submit" value="Submit"></p>' 
-    +
-    ' </form>';
-})
+
 //注册
 router.post('register', async ctx => {
 
@@ -177,7 +165,7 @@ router.post('updateUserInfo', async (ctx) => {
     }
     console.log(user_profile_photo)
     if (user_profile_photo) {
-        user_profile_photo = `http://${getIPAdress()}:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+        user_profile_photo = `http://47.244.57.219:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
     } else {
         console.log(22)
         let oldphoto = await ctx.db.query('select * from users where user_id=?', [user_id])
