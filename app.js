@@ -18,8 +18,8 @@ const options = { threshold: 2048 };
 const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
 const SocketIO = require('./socket.js')
-const port = 80;
-global.ip='47.244.57.219'
+global.port = 80;
+global.ip = '47.244.57.219'
 // global.ip = '192.168.0.10'
 
 function getIPAdress() {
@@ -36,7 +36,7 @@ function getIPAdress() {
 }
 const host = getIPAdress()
 server.listen(process.env.PORT || port, host, () => {
-    console.log(`app run at : http://${host}:${port}`);
+    console.log(`app run at : http://${host}:${global.port}`);
 })
 
 //连接数据库

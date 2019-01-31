@@ -37,7 +37,7 @@ router.post('addPost', async ctx => {
     } else {
         if (background) {
             console.log(background)
-            background = `http://${global.ip}:8080/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
+            background = `http://${global.ip}:${global.port}/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
         }
     }
 

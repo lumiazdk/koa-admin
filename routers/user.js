@@ -25,7 +25,7 @@ router.post('register', async ctx => {
 
     let { user_telephone_number, user_password, motto = '这个人很懒，什么都没留下' } = ctx.request.fields ? ctx.request.fields : {}
     const user_name = `用户${uuid.v1().split('-')[0]}`
-    const user_profile_photo = `http://${global.ip}:8080/photo.jpeg`
+    const user_profile_photo = `http://${global.ip}:${global.port}/photo.jpeg`
     let body = ctx.request.fields ? ctx.request.fields : {}
 
     let schema = {
@@ -165,7 +165,7 @@ router.post('updateUserInfo', async (ctx) => {
     }
     console.log(user_profile_photo)
     if (user_profile_photo) {
-        user_profile_photo = `http://${global.ip}:8080/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
+        user_profile_photo = `http://${global.ip}:${global.port}/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
     } else {
         console.log(22)
         let oldphoto = await ctx.db.query('select * from users where user_id=?', [user_id])
