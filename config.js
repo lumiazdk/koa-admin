@@ -11,7 +11,7 @@ module.exports = {
     secret_key: ['sadfasgdsfsdfes', 'etdty5erdydr6hy'],
 
     //database
-    db_host: '47.244.57.219',
+    db_host: global.ip,
     db_port: 3306,
     db_user: 'root',
     db_pass: 'lumiazdk640',
