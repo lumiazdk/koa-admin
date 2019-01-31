@@ -1,13 +1,13 @@
 {
-  "main.css": "./../../koajs/build/static/css/main.bf0fa4b5.chunk.css",
-  "main.js": "./../../koajs/build/static/js/main.936fff7c.chunk.js",
-  "main.js.map": "./../../koajs/build/static/js/main.936fff7c.chunk.js.map",
-  "../../koajs/build/static/js/1.f63764e7.chunk.js": "./../../koajs/build/static/js/1.f63764e7.chunk.js",
-  "../../koajs/build/static/js/1.f63764e7.chunk.js.map": "./../../koajs/build/static/js/1.f63764e7.chunk.js.map",
-  "runtime~main.js": "./../../koajs/build/static/js/runtime~main.4a686d48.js",
-  "runtime~main.js.map": "./../../koajs/build/static/js/runtime~main.4a686d48.js.map",
-  "../../koajs/build/static/css/main.bf0fa4b5.chunk.css.map": "./../../koajs/build/static/css/main.bf0fa4b5.chunk.css.map",
+  "main.css": "./static/css/main.bf0fa4b5.chunk.css",
+  "main.js": "./static/js/main.936fff7c.chunk.js",
+  "main.js.map": "./static/js/main.936fff7c.chunk.js.map",
+  "static/js/1.f63764e7.chunk.js": "./static/js/1.f63764e7.chunk.js",
+  "static/js/1.f63764e7.chunk.js.map": "./static/js/1.f63764e7.chunk.js.map",
+  "runtime~main.js": "./static/js/runtime~main.4a686d48.js",
+  "runtime~main.js.map": "./static/js/runtime~main.4a686d48.js.map",
+  "static/css/main.bf0fa4b5.chunk.css.map": "./static/css/main.bf0fa4b5.chunk.css.map",
   "index.html": "./index.html",
-  "precache-manifest.7ab37ce7009eb4788fa797a6e82f4d1f.js": "./precache-manifest.7ab37ce7009eb4788fa797a6e82f4d1f.js",
+  "precache-manifest.3f5771e41dd166a519c294f55f25ef69.js": "./precache-manifest.3f5771e41dd166a519c294f55f25ef69.js",
   "service-worker.js": "./service-worker.js"
 }
