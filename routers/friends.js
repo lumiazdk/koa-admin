@@ -1,5 +1,4 @@
 const Router = require('koa-router');
-const moment = require('moment')
 let router = new Router();
 function getIPAdress() {
     var interfaces = require('os').networkInterfaces();
