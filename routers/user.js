@@ -165,7 +165,7 @@ router.post('updateUserInfo', async (ctx) => {
     }
     console.log(user_profile_photo)
     if (user_profile_photo) {
-        user_profile_photo = `http://47.244.57.219:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
+        user_profile_photo = `http://47.244.57.219:8080/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
     } else {
         console.log(22)
         let oldphoto = await ctx.db.query('select * from users where user_id=?', [user_id])
