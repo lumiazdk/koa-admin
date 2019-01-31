@@ -18,7 +18,7 @@ const options = { threshold: 2048 };
 const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
 const SocketIO = require('./socket.js')
-const port = 8080;
+const port = 80;
 global.ip='47.244.57.219'
 // global.ip = '192.168.0.10'
 
