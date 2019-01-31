@@ -36,6 +36,7 @@ router.post('addPost', async ctx => {
 
     } else {
         if (background) {
+            console.log(background)
             background = `http://47.244.57.219:8080/${ctx.request.files[0].path.split('\\').reverse()[0]}`
         }
     }
