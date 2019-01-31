@@ -19,6 +19,7 @@ const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
 const SocketIO = require('./socket.js')
 const port = 8080;
+global.ip='47.244.57.219'
 function getIPAdress() {
     var interfaces = require('os').networkInterfaces();
     for (var devName in interfaces) {
