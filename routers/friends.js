@@ -31,6 +31,12 @@ router.post('updateFriend', async ctx => {
     }
     await ctx.db.query(`update friend set status=? where user_id=? and friend_id=?`, [status, user_id, friend_id])
     await ctx.db.query(`update friend set status=? where user_id=? and friend_id=?`, [status, friend_id, user_id])
+    if (global.userServer[user_id]) {
+        global.userServer[user_id].emit('getFriendRequest')
+    }
+    if (global.userServer[friend_id]) {
+        global.userServer[friend_id].emit('getFriendRequest')
+    }
     ctx.results.success({}, '请求成功')
 })
 //添加好友？
