@@ -19,7 +19,13 @@ function getIPAdress() {
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
-
+//上传
+router.post('upload', (ctx) => {
+    ctx.body = {
+        "status": 1,
+        "url": `http://${global.ip}:${global.port}/upload_${ctx.request.files[0].path.split('upload_').reverse()[0]}`
+    }
+})
 //注册
 router.post('register', async ctx => {
 
