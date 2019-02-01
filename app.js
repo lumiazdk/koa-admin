@@ -19,8 +19,8 @@ const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
 const SocketIO = require('./socket.js')
 global.port = 80;
-// global.ip = '47.244.57.219'
-global.ip = '192.168.0.10'
+global.ip = '47.244.57.219'
+// global.ip = '192.168.0.10'
 
 function getIPAdress() {
     var interfaces = require('os').networkInterfaces();
@@ -99,9 +99,9 @@ app.use(async (ctx, next) => {
 });
 
 // app.use(staticCache(config.wwwDir))
-app.use(serve(path.join(__dirname, './build')));
+app.use(staticCache(path.join(__dirname, './build')));
 app.use(serve(path.join(__dirname, './upload')));
-app.use(serve(path.join(__dirname, './www')));
+app.use(staticCache(path.join(__dirname, './www')));
 app.use(compress(options));
 console.log(__dirname + '/upload')
 app.use(function (ctx, next) {
