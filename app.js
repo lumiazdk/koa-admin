@@ -13,7 +13,7 @@ const compress = require('koa-compress');
 const app = new Koa();
 const path = require('path')
 //compress
-const options = { threshold: 2048 };
+const options = { threshold: 1024, flush: require('zlib').Z_SYNC_FLUSH };
 //socket连接
 const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
@@ -99,12 +99,13 @@ app.use(async (ctx, next) => {
 });
 
 // app.use(staticCache(config.wwwDir))
-app.use(staticCache(path.join(__dirname, './build')));
+app.use(staticCache(path.join(__dirname, './build'))); 
 app.use(serve(path.join(__dirname, './upload')));
 app.use(staticCache(path.join(__dirname, './www')));
 app.use(compress(options));
 console.log(__dirname + '/upload')
 app.use(function (ctx, next) {
+    ctx.compress = true
     return next().catch((err) => {
         if (401 == err.status) {
             // ctx.status = 401;

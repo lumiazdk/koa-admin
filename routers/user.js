@@ -4,6 +4,9 @@ const jwt = require('jwt-simple')
 const uuid = require('uuid')
 const captchapng = require('captchapng')
 let router = new Router();
+let fs = require('fs');
+let path = require('path');
+
 function getIPAdress() {
     var interfaces = require('os').networkInterfaces();
     for (var devName in interfaces) {
@@ -19,6 +22,11 @@ function getIPAdress() {
 //秘钥
 const jwtSecret = 'jwtSecret'
 const tokenExpiresTime = 1000 * 60 * 60 * 24 * 7
+//index.html
+router.get('', (ctx) => {
+    ctx.response.type = 'html'
+    ctx.body = fs.readFileSync(path.join(__dirname, '../build/index.html'))
+})
 //上传
 router.post('upload', (ctx) => {
     ctx.body = {

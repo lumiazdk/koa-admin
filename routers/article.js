@@ -168,7 +168,7 @@ router.post('getPost', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let arr = []
+    let arr = [23]
     let searchQuery = 'where'
     if (JSON.stringify(where) != "{}") {
         for (let k in where) {
