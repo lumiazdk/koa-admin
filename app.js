@@ -43,6 +43,7 @@ server.listen(process.env.PORT || port, host, () => {
 let db = require('./libs/db');
 //socket
 SocketIO(io, db)
+app.use(compress(options));
 
 //router
 let mainRouter = new Router();
@@ -99,11 +100,10 @@ app.use(async (ctx, next) => {
 });
 
 // app.use(staticCache(config.wwwDir))
-app.use(staticCache(path.join(__dirname, './build'))); 
+app.use(staticCache(path.join(__dirname, './build')));
 app.use(serve(path.join(__dirname, './upload')));
 app.use(staticCache(path.join(__dirname, './www')));
-app.use(compress(options));
-console.log(__dirname + '/upload')
+
 app.use(function (ctx, next) {
     ctx.compress = true
     return next().catch((err) => {
