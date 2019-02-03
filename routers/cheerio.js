@@ -49,7 +49,7 @@ router.post('getyueduwen', async (ctx) => {
 router.post('tuweng', async (ctx) => {
     let data = [];
     for (let p = 2; p < 5; p++) {
-        const reptileUrl = `http://www.tuweng.com/life/index_${p}.html`;
+        const reptileUrl = `http://www.tuweng.com/culture/index_${p}.html`;
         let url = await request.get(reptileUrl).charset('gbk').buffer(true).set('Accept-Language', 'zh-CN,zh;q=0.8');
         let $ = cheerio.load(url.text);
         $('.TuWen_nr .lm').each((i, item) => {
