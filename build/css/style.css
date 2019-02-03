@@ -67,7 +67,7 @@
 }
 
 #ajaxloader2 {
-  margin: 30px auto 0;
+  position: relative;
 }
 
 #ajaxloader2 .outer {
@@ -556,7 +556,7 @@ h1.loadingtext {
   text-transform: uppercase;
   font-family: 'Nunito', sans-serif;
   font-size: 2.6875em;
-  color: transparent;
+  /* color: transparent; */
   letter-spacing: 0.01em;
 }
 
