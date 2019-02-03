@@ -7,12 +7,11 @@ var iconv = require('iconv-lite');
 let router = new Router();
 router.post('getyueduwen', async (ctx) => {
     let data = [];
-    for (let p = 2; p < 14; p++) {
+    for (let p = 2; p < 5; p++) {
         const reptileUrl = `https://www.yueduwen.com/a/tupian/list_17_${p}.html`;
         let url = await request.get(reptileUrl).charset('gbk').buffer(true).set('Accept-Language', 'zh-CN,zh;q=0.8');
         let $ = cheerio.load(url.text);
-        $('.mlist').nextAll();
-        t2.each((i, item) => {
+        $('.mlist').each((i, item) => {
             let _this = $(item);
             data.push({
                 title: _this.find('.mlist-content h2 a').text(),
@@ -38,7 +37,7 @@ router.post('getyueduwen', async (ctx) => {
         let { forward_num, postId, cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background, type } = ctx.request.fields ? ctx.request.fields : {}
         for (let i = 0; i < data.length; i++) {
             let item = data[i]
-            await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [15, item.title, item.content, item.background, create_time, update_time, 5, item.describes])
+            await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [23, item.title, item.content, item.background, create_time, update_time, 7, item.describes])
             console.log(`插入${i}条内容`)
 
         }
@@ -49,7 +48,7 @@ router.post('getyueduwen', async (ctx) => {
 })
 router.post('tuweng', async (ctx) => {
     let data = [];
-    for (let p = 2; p < 30; p++) {
+    for (let p = 2; p < 5; p++) {
         const reptileUrl = `http://www.tuweng.com/life/index_${p}.html`;
         let url = await request.get(reptileUrl).charset('gbk').buffer(true).set('Accept-Language', 'zh-CN,zh;q=0.8');
         let $ = cheerio.load(url.text);
