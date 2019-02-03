@@ -50,6 +50,8 @@ let mainRouter = new Router();
 mainRouter.use('/', require('./routers/user'));
 mainRouter.use('/', require('./routers/article'));
 mainRouter.use('/', require('./routers/friends'));
+mainRouter.use('/', require('./routers/cheerio'));
+
 
 
 

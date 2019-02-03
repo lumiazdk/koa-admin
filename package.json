@@ -15,6 +15,8 @@
   "dependencies": {
     "ajv-errors": "^1.0.1",
     "captchapng": "^0.0.1",
+    "cheerio": "^1.0.0-rc.2",
+    "iconv-lite": "^0.4.24",
     "jwt-simple": "^0.5.5",
     "koa": "^2.6.2",
     "koa-better-body": "^3.0.4",
@@ -26,7 +28,10 @@
     "koa-static-cache": "^5.1.2",
     "moment": "^2.23.0",
     "mysql-pro": "^1.0.1",
+    "request": "^2.88.0",
     "socket.io": "^2.2.0",
+    "superagent": "^4.1.0",
+    "superagent-charset": "^1.2.0",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

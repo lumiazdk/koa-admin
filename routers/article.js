@@ -178,11 +178,11 @@ router.post('getPost', async ctx => {
     }
 
     let start = 0 + (page - 1) * 10
-    let friend = await ctx.db.query(`select * from friend where user_id=?`, [user_id])
-    let friendarr = [user_id]
-    for (let item of friend) {
-        friendarr.push(item.friend_id)
-    }
+    // let friend = await ctx.db.query(`select * from friend where user_id=?`, [user_id])
+    // let friendarr = [user_id]
+    // for (let item of friend) {
+    //     friendarr.push(item.friend_id)
+    // }
     let data = await ctx.db.query(`select * from post ${searchQuery}  order by create_time DESC limit ?,?`, [start, parseInt(pageSize)])
     let result = []
     for (let item of Array.from(data)) {
