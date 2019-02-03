@@ -168,21 +168,22 @@ router.post('getPost', async ctx => {
         ctx.results.jsonErrors({ errors })
         return
     }
-    let arr = [23]
-    let searchQuery = 'where'
+    let arr = []
+    let searchQuery = ''
     if (JSON.stringify(where) != "{}") {
         for (let k in where) {
             arr.push(`${k}="${where[k]}"`)
         }
-        searchQuery = `where ${arr.toString()} and`
+        searchQuery = `where ${arr.toString()}`
     }
+
     let start = 0 + (page - 1) * 10
     let friend = await ctx.db.query(`select * from friend where user_id=?`, [user_id])
     let friendarr = [user_id]
     for (let item of friend) {
         friendarr.push(item.friend_id)
     }
-    let data = await ctx.db.query(`select * from post  ${searchQuery} aid in (?) order by create_time DESC limit ?,?`, [friendarr, start, parseInt(pageSize)])
+    let data = await ctx.db.query(`select * from post ${searchQuery}  order by create_time DESC limit ?,?`, [start, parseInt(pageSize)])
     let result = []
     for (let item of Array.from(data)) {
         let data = await ctx.db.query(`select name,tid,postId from tag_relationship,tag,post where postId=? and tag.tid=tag_relationship.tagid and tag_relationship.postid=post.id`, [item.id])
