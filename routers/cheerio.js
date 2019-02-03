@@ -49,7 +49,7 @@ router.post('getyueduwen', async (ctx) => {
 router.post('tuweng', async (ctx) => {
     let data = [];
     for (let p = 2; p < 5; p++) {
-        const reptileUrl = `http://www.tuweng.com/culture/index_${p}.html`;
+        const reptileUrl = `http://www.tuweng.com/pic/index_${p}.html`;
         let url = await request.get(reptileUrl).charset('gbk').buffer(true).set('Accept-Language', 'zh-CN,zh;q=0.8');
         let $ = cheerio.load(url.text);
         $('.TuWen_nr .lm').each((i, item) => {
@@ -88,7 +88,7 @@ router.post('tuweng', async (ctx) => {
         let { forward_num, postId, cid, aid, content, title, create_time = new Date(), update_time = new Date(), describes, background, type } = ctx.request.fields ? ctx.request.fields : {}
         for (let i = 0; i < data.length; i++) {
             let item = data[i]
-            await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [23, item.title, item.content, item.background, create_time, update_time, 5, item.describes])
+            await ctx.db.query('insert into post (aid,title,content,background,create_time,update_time,cid,describes) values (?,?,?,?,?,?,?,?)', [23, item.title, item.content, item.background, create_time, update_time, 9, item.describes])
             console.log(`插入${i + 1}条内容,标题：${data[i].title}`)
         }
     }
