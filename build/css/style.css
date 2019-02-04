@@ -119,6 +119,7 @@
 
 #ajaxloader3 {
   margin: 0 auto;
+  position: relative;
 }
 
 #ajaxloader3 .outer {
@@ -154,8 +155,9 @@
   box-shadow: 0 0 15px rgba(0, 76, 61, 0.9);
   width: 30px;
   height: 30px;
-  position: relative;
-  top: -50px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
   margin: 0 auto;
   -webkit-animation: spin-right 1s linear infinite normal;
   -moz-animation: spin-right 1s linear infinite normal;
@@ -1068,14 +1070,14 @@ h1.loadingtext span:nth-child(7) {
 }
 
 #bodyLoading {
+  padding: 40px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  /* justify-content: center; */
+  /* align-items: center; */
   height: 100%;
-  background: #161616;
+  /* background: #161616; */
   font: 12px normal Verdana, Arial, Helvetica, sans-serif;
   position: absolute;
-  top: 0;
   left: 0;
   width: 100%;
   z-index: 9999;
