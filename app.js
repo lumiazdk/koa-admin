@@ -18,9 +18,9 @@ const options = { threshold: 1024, flush: require('zlib').Z_SYNC_FLUSH };
 const server = require('http').Server(app.callback());
 const io = require('socket.io')(server);
 const SocketIO = require('./socket.js')
-global.port = 80;
-if (getIPAdress() == '192.168.0.10') {
-    global.ip = '192.168.0.10'
+global.port = 8080;
+if (getIPAdress() == '192.168.101.183') {
+    global.ip = '192.168.101.183'
 } else {
     global.ip = '47.244.57.219'
 }
